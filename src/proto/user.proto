@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+  rpc GetAllUsers (GetAllUsersRequest) returns (AllUsersResponse);
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (Status);
+  rpc DeleteUser (DeleteUserRequest) returns (Status);
+}
+
+message GetAllUsersRequest {}
+
+message AllUsersResponse {
+  Status status = 1;
+  repeated User users = 2;
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  map<string, string> updated_fields = 2;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message Status {
+  bool success = 1;
+  string message = 2;
+}
+
+message UserResponse {
+  Status status = 1;
+  UserProfile user = 2;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string avatar = 3;
+}
+
+message UserProfile {
+  string id = 1;
+  string full_name = 2;
+  string username = 3;
+  string avatar = 4;
+  string banner = 5;
+  Relation relation = 6;
+  int32 followers_count = 7;
+  int32 following_count = 8;
+}
+
+message Relation {
+  Follow follow = 1;
+  Mate mate = 2;
+}
+
+message Follow {
+  RelationStatus follow_status = 1;
+  bool is_followed = 2;
+}
+
+message Mate {
+  RelationStatus mate_status = 1;
+}
+
+enum RelationStatus {
+  pending = 1;
+  accepted = 2;
+}
