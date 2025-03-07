@@ -11,7 +11,7 @@ message RegisterRequest {
   string full_name = 1;
   string username = 2;
   string dob = 3;
-  string account_type = 4;
+  AccountType account_type = 4;
   string password = 5;
 }
 
@@ -20,18 +20,24 @@ message LoginRequest {
   string password = 2;
 }
 
-message Status {
-  bool success = 1;
-  string message = 2;
-}
-
 message AuthResponse {
   Status status = 1;
   User user = 2;
+}
+
+message Status {
+  bool success = 1;
+  string message = 2;
 }
 
 message User {
   string id = 1;
   string username = 2;
   string avatar = 3;
+}
+
+enum AccountType {
+  personal = 1;
+  creator = 2;
+  business = 3;
 }

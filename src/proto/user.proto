@@ -3,40 +3,44 @@ syntax = "proto3";
 package user;
 
 service UserService {
-  rpc GetAllUsers (GetAllUsersRequest) returns (AllUsersResponse);
+  rpc GetUsers (GetUsersRequest) returns (UsersResponse);
   rpc GetUser (GetUserRequest) returns (UserResponse);
   rpc UpdateUser (UpdateUserRequest) returns (Status);
   rpc DeleteUser (DeleteUserRequest) returns (Status);
 }
 
-message GetAllUsersRequest {}
-
-message AllUsersResponse {
-  Status status = 1;
-  repeated User users = 2;
+message GetUsersRequest {
+  repeated string user_ids = 1;
+  int32 offset = 2;
 }
 
 message GetUserRequest {
-  string user_id = 1;
+  string username = 1;
+  string req_user_id = 2;
 }
 
 message UpdateUserRequest {
   string user_id = 1;
-  map<string, string> updated_fields = 2;
+  UpdatedFields updated_fields = 2;
 }
 
 message DeleteUserRequest {
   string user_id = 1;
 }
 
-message Status {
-  bool success = 1;
-  string message = 2;
-}
-
 message UserResponse {
   Status status = 1;
   UserProfile user = 2;
+}
+
+message UsersResponse {
+  Status status = 1;
+  repeated User users = 2;
+}
+
+message Status {
+  bool success = 1;
+  string message = 2;
 }
 
 message User {
@@ -49,11 +53,29 @@ message UserProfile {
   string id = 1;
   string full_name = 2;
   string username = 3;
-  string avatar = 4;
-  string banner = 5;
-  Relation relation = 6;
-  int32 followers_count = 7;
-  int32 following_count = 8;
+  Bio bio = 4;
+  string account_type = 5;
+  string dob = 6;
+  Gender gender = 7;
+  string profession = 8;
+  string avatar = 9;
+  string banner = 10;
+  Relation relation = 11;
+  int32 followers_count = 12;
+  int32 following_count = 13;
+  int32 posts_count = 14;
+}
+
+message Bio {
+  string text = 1;
+  repeated string links = 2;
+  Track track = 3;
+}
+
+message Track {
+  string id = 1;
+  string title = 2;
+  string artist = 3;
 }
 
 message Relation {
@@ -73,4 +95,27 @@ message Mate {
 enum RelationStatus {
   pending = 1;
   accepted = 2;
+}
+
+message UpdatedFields {
+  string full_name = 1;
+  string username = 2;
+  string dob = 3;
+  AccountType account_type = 4;
+  string bio = 5;
+  Gender gender = 6;
+  string profession = 7;
+  string avatar = 8;
+  string banner = 9;
+}
+
+enum AccountType {
+  personal = 1;
+  creator = 2;
+  business = 3;
+}
+
+enum Gender {
+  male = 1;
+  female = 2;
 }

@@ -1,12 +1,24 @@
 import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
+import axios from "axios";
+import fs from "fs/promises";
 import path from "path";
+import { connectDB } from "./db/index.js";
 import authService from "./services/auth.service.js";
 import userService from "./services/user.service.js";
 
-const loadProto = (protoFile) =>
-  grpc.loadPackageDefinition(
-    protoLoader.loadSync(path.resolve(`src/proto/${protoFile}.proto`), {
+const PROTO_DIR = path.resolve("./src/proto");
+const BASE_URL = "https://fiyoproto.vercel.app/fiyouser";
+
+const loadProto = async (name) => {
+  const filePath = path.join(PROTO_DIR, name);
+  await fs.mkdir(PROTO_DIR, { recursive: true });
+
+  const { data } = await axios.get(`${BASE_URL}/${name}`);
+  await fs.writeFile(filePath, data);
+
+  return grpc.loadPackageDefinition(
+    await protoLoader.load(filePath, {
       keepCase: true,
       longs: String,
       enums: String,
@@ -14,26 +26,26 @@ const loadProto = (protoFile) =>
       oneofs: true,
     })
   );
-
-const services = {
-  auth: loadProto("auth").auth.AuthService,
-  user: loadProto("user").user.UserService,
 };
 
-const server = new grpc.Server();
+const startServer = async () => {
+  const authProto = await loadProto("auth.proto");
+  const userProto = await loadProto("user.proto");
 
-server.addService(services.auth.service, authService);
-server.addService(services.user.service, userService);
+  const server = new grpc.Server();
+  server.addService(authProto?.auth?.AuthService?.service, authService);
+  server.addService(userProto?.user?.UserService?.service, userService);
 
-const FIYOUSER_SERVICE_URL =
-  process.env.FIYOUSER_SERVICE_URL || "localhost:8001";
+  const address = process.env.FIYOUSER_SERVICE_URL || "localhost:8001";
+  server.bindAsync(address, grpc.ServerCredentials.createInsecure(), () =>
+    console.log(`🚀 gRPC Server running at ${address}`)
+  );
+};
 
-server.bindAsync(
-  FIYOUSER_SERVICE_URL,
-  grpc.ServerCredentials.createInsecure(),
-  () => {
-    console.log(`🚀 gRPC Server running at ${FIYOUSER_SERVICE_URL}`);
-  }
-);
-
-export default server;
+connectDB()
+  .then(() =>
+    startServer().catch(
+      (err) => (console.error("Server error:", err), process.exit(1))
+    )
+  )
+  .catch((err) => console.error("Database connection error:", err));
